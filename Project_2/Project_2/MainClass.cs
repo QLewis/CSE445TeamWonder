@@ -14,27 +14,35 @@ namespace WeimoPlant
         static void Main(string[] args)
         {
             const int NUM_OF_DEALERS = 5;
+            const int NUM_OF_PLANTS = 3;
+            const int BUFFER_SIZE = 3;
 
             Bank bank = new Bank();
-            MultiCellBuffer buffer = new MultiCellBuffer(3);
+
+            //initializes the MulitCellBuffer with correct size
+            MultiCellBuffer buffer = new MultiCellBuffer(BUFFER_SIZE);
 
 			List<Plant> plants = new List<Plant>();
-			plants.Add(new Plant(bank, buffer));
-			plants.Add(new Plant(bank, buffer));
-            plants.Add(new Plant(bank, buffer));
+
+            //Create (3) Plants
+            for (int i = 0; i < NUM_OF_PLANTS; i++)
+            {
+                plants.Add(new Plant(bank, buffer));
+            }
 
 			List<Dealer> dealers = new List<Dealer>();
 
-			Thread[] dealerThreads = new Thread[NUM_OF_DEALERS];
-            for (int i = 0; i < dealerThreads.Length; i++)
+            //Create (5) Dealers and names them
+            for (int i = 0; i < NUM_OF_DEALERS; i++)
 			{
-                Dealer dealer = new Dealer(bank, buffer);
+                Dealer dealer = new Dealer("Dealer #" + (i + 1), bank, buffer);
                 dealers.Add(dealer);
 
-				dealerThreads[i] = new Thread(new ThreadStart(dealer.Run));
-                dealerThreads[i].Name = "Dealer #" + (i + 1);
-				dealerThreads[i].Start();
+                Thread t = new Thread(new ThreadStart(dealer.Run));
+                t.IsBackground = true;
+                t.Start();
 
+                //Each dealer must 
 				foreach (Plant p in plants)
 				{
 					p.subscribe(dealer);
@@ -49,6 +57,8 @@ namespace WeimoPlant
 				plantThreads[i].Name = "Plant #" + (i + 1);                    //Name each thread
 				plantThreads[i].Start();                                        //Start each thread
 			}
+
+
         }
     }
 }
