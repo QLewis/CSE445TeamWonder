@@ -1,9 +1,0 @@
-C:/Users/Bibliophile/Documents/College/Fifth Year/Fall 2017/CSE 445/CSE445TeamWonder/Proj_2_Attempt_2/Proj_2_Attempt_2/bin/Debug/Proj_2_Attempt_2.exe.config
-C:/Users/Bibliophile/Documents/College/Fifth Year/Fall 2017/CSE 445/CSE445TeamWonder/Project_2/Proj_2_Attempt_2/bin/Debug/Proj_2_Attempt_2.exe.config
-C:/Users/Bibliophile/Documents/College/Fifth Year/Fall 2017/CSE 445/CSE445TeamWonder/Project_2/Project_2/bin/Debug/Proj_2_Attempt_2.exe.config
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/bin/Debug/Proj_2_Attempt_2.exe.config
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/bin/Debug/Proj_2_Attempt_2.exe
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/bin/Debug/Proj_2_Attempt_2.pdb
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/obj/Debug/WeimoPlant.csproj.CoreCompileInputs.cache
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/obj/Debug/Proj_2_Attempt_2.exe
-/Users/alli/repos/CSE445TeamWonder/Project_2/Project_2/obj/Debug/Proj_2_Attempt_2.pdb
