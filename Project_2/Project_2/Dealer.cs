@@ -10,17 +10,19 @@ namespace WeimoPlant
 {
     public class Dealer
     {
-        //This is the function that the threads execute
-        public void Run()
-        {
-            
-        }
+        private Bank bank;
 
+        //Constructor that instantiates Bank object
+        public Dealer(Bank bank)
+        {
+            this.bank = bank();
+        }
+      
         public void PriceChanged(Int32 price) {
             Order order = new Order();
             order.SenderID = "dealer";
             order.Amount = 1;
-            order.CardNum = 1;
+            order.CardNum = bank.applyForCC();
             order.RecieverID = "plant";
             order.UnitPrice = price;
             order.TimeStamp = System.DateTime.Now;

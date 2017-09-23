@@ -9,6 +9,21 @@ namespace WeimoPlant
 
     class Plant
     {
+        //---------------------------------------------------------------------
+        
+        //Q'MARIHA ADDED THE FOLLOWING CODE
+
+        //When the dealer tries to buy from a plant, the plant sends the account number and funds to the bank
+        private Bank bank;
+
+        //Constructor that instantiates Bank object
+        public Plant(Bank bank)
+        {
+            this.bank = bank;
+        }
+
+        //-------------------------------------------------------------------------
+
         //Link event to delegate
         public static event priceCutEvent priceCut;
 
