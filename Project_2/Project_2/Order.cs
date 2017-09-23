@@ -33,17 +33,13 @@ namespace WeimoPlant
             return stringBuilder.ToString();
         }
 
-        public static Order Decode(String str) {
+        public static Order Decode(String str)
+        {
             XmlSerializer orderSerializer = new XmlSerializer(typeof(Order));
 
-			using (TextReader reader = new StringReader(str))
-			{
-				return (Order) orderSerializer.Deserialize(reader);
-			}
+            using (TextReader reader = new StringReader(str)) {
+                return (Order)orderSerializer.Deserialize(reader);
+            }
         }
-
-
-
-
     }
 }
