@@ -10,6 +10,7 @@ namespace WeimoPlant
     {
         Semaphore resources;            //Semaphore for handling resources
         List<string> buffer;          //List for holding the data cells
+
         //Constructor
         public MultiCellBuffer(Int32 size)
         {
@@ -30,6 +31,8 @@ namespace WeimoPlant
 
         public string getOneCell()
         {
+            if (buffer.Count == 0) { return null; }
+
             string dataCell;
 
             lock (buffer) {

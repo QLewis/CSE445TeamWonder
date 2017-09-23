@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Diagnostics;
+using Proj_2_Attempt_2.EncryptDecrypt;
 
 namespace WeimoPlant
 {
@@ -17,15 +18,13 @@ namespace WeimoPlant
         private Bank bank;
         private MultiCellBuffer buffer;
 
-        //Constructor that instantiates Bank object
+        //Constructor that instantiates Bank and Multi-Cell Buffer objects
         public Plant(Bank bank, MultiCellBuffer buffer)
         {
             this.bank = bank;
             this.buffer = buffer;
         }
-
-        //-------------------------------------------------------------------------
-
+        
         //Link event to delegate
         public event priceCutEvent priceCut;
 
@@ -39,7 +38,8 @@ namespace WeimoPlant
         //This is local data unique to each thread; only the host thread can change its
         //value. No other threads can touch it
         private Int32 nextPrice;
-        private Int32 priceCutEventsLeft = 6;
+        private Double secondsSinceLastSale = 0.0;
+        private Int32 priceCutEventsLeft = 5;
 
         //Returns the current price of cars
         public Int32 getPrice() { return carPrice.getLowPrice(); }
@@ -61,6 +61,11 @@ namespace WeimoPlant
             }
         }
 
+        public int newPrice(Double lastSale)
+        {
+            return nextPrice + rng.Next(-100, 100);
+        }
+
         //This is the function that the threads execute
         //Every half second, generates and sets a new car price
         public void Run()
@@ -72,10 +77,18 @@ namespace WeimoPlant
 
             //Perform a loop to simulate real-time operation
             while (priceCutEventsLeft > 0) {
+                String orderString = buffer.getOneCell();
+
+                if (orderString != null) {
+                    OrderProcessor processor = new OrderProcessor(this.bank, orderString);
+                    Thread orderProcessing = new Thread(new ThreadStart(processor.ProcessOrderString));
+                    orderProcessing.Start();
+                }
+                
                 Thread.Sleep(500);      //Every half second
 
                 //Generate a new local price for each thread
-                nextPrice = nextPrice + rng.Next(-100, 100);
+                nextPrice = newPrice(secondsSinceLastSale);
 
                 //By the way, Console.WriteLine works now. Don't know why it
                 //didn't work earlier
@@ -111,5 +124,40 @@ namespace WeimoPlant
 
         //Set overall lowest price
         public void setLowPrice(Int32 newPrice) { this.lowPrice = newPrice; }
+    }
+
+    class OrderProcessor
+    {
+        private string orderString;
+        private Bank bank;
+
+        public OrderProcessor(Bank _bank, string _orderString)
+        {
+            this.bank = _bank;
+            this.orderString = _orderString;
+        }
+
+        public void ProcessOrderString()
+        {
+            Order order = Order.Decode(this.orderString);
+
+            string encryptedCCString = encryptCC(order.CardNum);
+
+            string validation = bank.validateCC(encryptedCCString, (order.Amount * order.UnitPrice * 1.08) + (order.Amount * 700));
+            if (validation.Equals("valid")) {
+
+            }
+        }
+        public string encryptCC(Int32 cardNum)
+        {
+            IService encrypt = new ServiceClient();
+            
+            Console.WriteLine("String to be encrypted: {0}", cardNum);
+
+            string encryptedCC = encrypt.Encrypt(cardNum.ToString());
+            Console.WriteLine("Encrypted string: {0}", encryptedCC);
+
+            return encryptedCC;
+        }
     }
 }
