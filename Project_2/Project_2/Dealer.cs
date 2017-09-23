@@ -10,11 +10,25 @@ namespace WeimoPlant
 {
     public class Dealer
     {
+        //Q'MARIHA ADDED THE FOLLOWING CODE
+        private Bank bank;
+
+        //Constructor that instantiates Bank object
+        public Dealer(Bank bank)
+        {
+            this.bank = bank;
+            //int account = bank.applyForCC();
+        }
+        //------------------------------------------------------------------------
+
         //This is the function that the threads execute
         public void dealerFunc()
         {
+            //Apply for a credit card account -- Q'MARIHA ADDED
+            bank.applyForCC();
+
             //Create a new plant object
-            Plant car = new Plant();
+            Plant car = new Plant(bank); //Q'MARIHA ADDED THE BANK PARAMETER
 
             //Every one second, querry the manufactuerer manually for the price
             for (Int32 i = 0; i < 10; i++) {
@@ -22,6 +36,8 @@ namespace WeimoPlant
                 Int32 carPrice = car.getPrice();
                 Console.WriteLine("Dealer {0} wants to buy a car for ${1}", Thread.CurrentThread.Name, carPrice);
             }
+
+
         }
 
         //Called only when a Dealership receives notification of a price cut

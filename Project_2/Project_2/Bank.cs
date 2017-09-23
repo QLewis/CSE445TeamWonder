@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using WeimoPlant;
 
 namespace WeimoPlant
 {
@@ -46,6 +47,8 @@ namespace WeimoPlant
 
             newItem.funds = random.Next(1000000, 10000000);
             ccNumbers.AddLast(newItem);
+            //Console.WriteLine("Credit card account: {0}, Starting funds: ${1}", newItem.cardNumber,newItem.funds);
+            Console.WriteLine("Dealer {0} has the account: {1}", Thread.CurrentThread.Name, newItem.cardNumber);
             return newItem.cardNumber;
         }
 
@@ -59,10 +62,14 @@ namespace WeimoPlant
                 {
                     if (ccLI.funds >= funds)
                     {
+                        ccLI.funds -= funds;
+                        Console.WriteLine("Credit card account: {0}, New funds: ${1}");
                         return "valid";
                     }
+                    Console.WriteLine("ERROR -- insufficient funds");
                 }
             }
+            Console.WriteLine("ERROR -- credit card account does not exist");
             return "invalid";
         }
 
@@ -74,6 +81,7 @@ namespace WeimoPlant
                 if (ccLI.cardNumber == cardNumber)
                 {
                     ccLI.funds += funds;
+                    Console.WriteLine("${0} has been deposited into account {1}, new funds: ${2}", funds, cardNumber, ccLI.funds);
                 }
             }
         }
