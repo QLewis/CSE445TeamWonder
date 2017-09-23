@@ -5,9 +5,9 @@ using System.Diagnostics;
 namespace WeimoPlant
 {
     //Declare a delegate for the price cut event
-    public delegate void priceCutEvent(Int32 cutPrice);
+    public delegate void priceCutEvent(String sender, Int32 cutPrice);
 
-    class Plant
+    public class Plant
     {
         //---------------------------------------------------------------------
         
@@ -15,11 +15,13 @@ namespace WeimoPlant
 
         //When the dealer tries to buy from a plant, the plant sends the account number and funds to the bank
         private Bank bank;
+        private MultiCellBuffer buffer;
 
         //Constructor that instantiates Bank object
-        public Plant(Bank bank)
+        public Plant(Bank bank, MultiCellBuffer buffer)
         {
             this.bank = bank;
+            this.buffer = buffer;
         }
 
         //-------------------------------------------------------------------------
@@ -50,9 +52,9 @@ namespace WeimoPlant
                 //Lock the car price object to prevent interrupts when changing the value
                 
                 lock (carPrice) {
-                    if (priceCut != null) {                 //If an event exists
-                        priceCut(newPrice);                 //Announce a price cut event
-                        carPrice.setLowPrice(newPrice);     //Set the new low car price
+                    if (priceCut != null) {                             //If an event exists
+                        priceCut(Thread.CurrentThread.Name, newPrice);  //Announce a price cut event
+                        carPrice.setLowPrice(newPrice);                 //Set the new low car price
                         priceCutEventsLeft -= 1;
                     }
                 }
@@ -61,7 +63,7 @@ namespace WeimoPlant
 
         //This is the function that the threads execute
         //Every half second, generates and sets a new car price
-        public void plantFunc()
+        public void Run()
         {
             //Subscribe to dealer purchase events
 
@@ -89,14 +91,14 @@ namespace WeimoPlant
         //For dealers to subscribe themselves to the price cut event
         public void subscribe(Dealer dealer)
         {
-            priceCut += new priceCutEvent(dealer.carsOnSale);
+            priceCut += new priceCutEvent(dealer.PriceChanged);
         }
     }
 
     //Thread locks cannot be performed on primitive data types, so we must
     //place the price value into an object container in order to create the
     //critical section
-    class LowestPrice
+    public class LowestPrice
     {
         //Default starting price for the cars for all plants
         private Int32 lowPrice = 500000;

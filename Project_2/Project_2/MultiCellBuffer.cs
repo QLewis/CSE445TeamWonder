@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace WeimoPlant
 {
     //Multi-cell buffer class to hold and release resouces for the dealers and plants
-    class MultiCellBuffer
+    public class MultiCellBuffer
     {
         Semaphore resources;            //Semaphore for handling resources
         List<string> buffer;          //List for holding the data cells
