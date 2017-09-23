@@ -11,17 +11,22 @@ namespace WeimoPlant
     public class Dealer
     {
         //This is the function that the threads execute
-        public void dealerFunc()
+        public void Run()
         {
-            //Create a new plant object
-            Plant car = new Plant();
+            
+        }
 
-            //Every one second, querry the manufactuerer manually for the price
-            for (Int32 i = 0; i < 10; i++) {
-                Thread.Sleep(1000);
-                Int32 carPrice = car.getPrice();
-                Console.WriteLine("Dealer {0} wants to buy a car for ${1}", Thread.CurrentThread.Name, carPrice);
-            }
+        public void PriceChanged(Int32 price) {
+            Order order = new Order();
+            order.SenderID = "dealer";
+            order.Amount = 1;
+            order.CardNum = 1;
+            order.RecieverID = "plant";
+            order.UnitPrice = price;
+            order.TimeStamp = System.DateTime.Now;
+            String orderString = Order.Encode(order);
+
+            //TODO: add to buffer
         }
 
         //Called only when a Dealership receives notification of a price cut
