@@ -42,6 +42,21 @@ namespace WeimoPlant
                  dealerThreads[i].Start();
              }              
 
+
+             //Create a new plant object
+             Plant carPlant = new Plant();
+
+             //Create (3) car manufacturers
+             Thread[] plants = new Thread[3];
+             for (int i = 0; i < 3; i++) {
+                 plants[i] = new Thread(new ThreadStart(carPlant.plantFunc));   //Multithread the plantFunc() section of Plant.cs
+                 plants[i].Name = (i + 1).ToString();                           //Name each thread
+                 plants[i].Start();                                             //Start each thread
+             }
+
+             //Create a test dealer
+             Dealer dealership = new Dealer();
+
              //Subscribe dealer to the price cut event
              Plant.priceCut += new priceCutEvent(dealership.carsOnSale);
 
@@ -70,6 +85,28 @@ namespace WeimoPlant
             Console.WriteLine(o2.CardNum);
             Console.WriteLine(o2.UnitPrice);
             Console.WriteLine(o2.RecieverID);
+             }
+
+
+            //Create test bank
+            Bank bank = new Bank();
+
+            //Create a test dealer
+            Dealer dealership = new Dealer(bank);
+
+            //Create a test plant
+            Plant plant = new Plant(bank);
+
+
+            //Create (3) car dealerships
+            Thread[] dealerships = new Thread[3];
+            for (int i = 0; i < 3; i++)
+            {
+                dealerships[i] = new Thread(new ThreadStart(dealership.dealerFunc));
+                dealerships[i].Name = (i + 1).ToString();
+                dealerships[i].Start();
+            }
+
         }
     }
 }
