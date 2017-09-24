@@ -60,7 +60,7 @@ namespace WeimoPlant
         private Int32 oldPrice = -1;
         private bool IsGoodPrice(Int32 price) {
             //price has to be 10% lower than the old price for an order to be made
-            if ((oldPrice == -1 || price < (oldPrice*0.9)) && need > 3)
+            if (((oldPrice == -1 || price < (oldPrice * 0.9)) && need > 3) || need > 10)
             {
                 oldPrice = price;
                 need = 0;
@@ -72,9 +72,16 @@ namespace WeimoPlant
 
         //Confirm the orders that have been completed by OrderProcessing
         public void ConfirmOrder(Order order, string validation) {
-            //TODO: get the params from OrderProcessing
-            DateTime confirmTime = DateTime.Now;
-            Console.WriteLine("Order confirmed at " + confirmTime);
+            if(order.SenderID == name) {
+				DateTime confirmTime = DateTime.Now;
+				TimeSpan t = confirmTime - order.TimeStamp;
+                if(validation.Equals("valid")) {
+                    Console.WriteLine("Successful order for {0} processed by {1} in {2}ms", order.SenderID, order.RecieverID, t.Milliseconds);
+                } else {
+                    Console.WriteLine("Failed order for {0} processed by {1} in {2}ms", order.SenderID, order.RecieverID, t.Milliseconds);
+                }
+            }
         }
+
     }
 }

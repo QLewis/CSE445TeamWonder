@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Proj_2_Attempt_2.EncryptDecrypt;
 using WeimoPlant;
 
 namespace WeimoPlant
@@ -47,35 +48,42 @@ namespace WeimoPlant
 
             newItem.funds = random.Next(1000000, 10000000);
             ccNumbers.AddLast(newItem);
-            //Console.WriteLine("Credit card account: {0}, Starting funds: ${1}", newItem.cardNumber,newItem.funds);
-            Console.WriteLine("Dealer {0} has the account: {1}", Thread.CurrentThread.Name, newItem.cardNumber);
+
             return newItem.cardNumber;
         }
 
         //This function checks to see if the credit card accound exists
-        //TODO: Add functionality to decrypt string
-        public string validateCC(int cardNumber, double funds)
+        public string validateCC(String encryptedCardNumber, double funds)
         {
+            Int32 cardNumber = DecryptCardNumber(encryptedCardNumber);
+
+            bool foundCreditCard = false;
             foreach (ccListItem ccLI in ccNumbers)
             {
                 if (ccLI.cardNumber == cardNumber)
                 {
+                    foundCreditCard = true;
                     if (ccLI.funds >= funds)
                     {
                         ccLI.funds -= funds;
-                        Console.WriteLine("Credit card account: {0}, New funds: ${1}");
+                        //Console.WriteLine("Credit card account: {0}, New funds: ${1}", cardNumber, funds);
                         return "valid";
                     }
                     Console.WriteLine("ERROR -- insufficient funds");
                 }
             }
-            Console.WriteLine("ERROR -- credit card account does not exist");
+            if(!foundCreditCard) {
+                Console.WriteLine("ERROR -- credit card account does not exist");    
+            }
+
             return "invalid";
         }
 
         //This function enables account holders to deposit funds into their account
-        public void depositFunds(int cardNumber, double funds)
+        public void depositFunds(String encryptedCardNumber, double funds)
         {
+            Int32 cardNumber = DecryptCardNumber(encryptedCardNumber);
+
             foreach (ccListItem ccLI in ccNumbers)
             {
                 if (ccLI.cardNumber == cardNumber)
@@ -85,8 +93,29 @@ namespace WeimoPlant
                 }
             }
         }
+
+        //Decrypt the CardNumber
+		public Int32 DecryptCardNumber(String encryptedNum)
+		{
+			ServiceClient decryptService = null;
+			for (int i = 0; i < 10 && decryptService == null; i++)
+			{
+				try
+				{
+					decryptService = new ServiceClient();
+				}
+				catch
+				{
+					Console.WriteLine("Error connecting to decryption service");
+				}
+			}
+
+			String cardNum = decryptService.Decrypt(encryptedNum);
+			Int32 cardNumber = Int32.Parse(cardNum);
+			return cardNumber;
+		}
     }
-    
+
     //Created a specific node to be used with the LinkedList class
     class ccListItem
     {

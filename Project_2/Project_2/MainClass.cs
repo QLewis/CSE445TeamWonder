@@ -17,7 +17,6 @@ namespace WeimoPlant
             const int NUM_OF_PLANTS = 3;
             const int BUFFER_SIZE = 3;
 
-
             Bank bank = new Bank();
 
             //initializes the MulitCellBuffer with correct size
@@ -57,6 +56,10 @@ namespace WeimoPlant
 				plantThreads[i] = new Thread(new ThreadStart(plants[i].Run));   //Multithread the plantFunc() section of Plant.cs
 				plantThreads[i].Name = "Plant #" + (i + 1);                    //Name each thread
 				plantThreads[i].Start();                                        //Start each thread
+
+				Thread t = new Thread(new ThreadStart(plants[i].RunProcessOrders));   //Multithread the plantFunc() section of Plant.cs
+                t.IsBackground = true;
+				t.Start();
 			}
         }
     }
