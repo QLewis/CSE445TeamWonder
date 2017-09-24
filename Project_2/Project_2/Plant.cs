@@ -11,10 +11,6 @@ namespace WeimoPlant
 
     public class Plant
     {
-        //---------------------------------------------------------------------
-        
-        //Q'MARIHA ADDED THE FOLLOWING CODE
-
         //When the dealer tries to buy from a plant, the plant sends the account number and funds to the bank
         private Bank bank;
         private MultiCellBuffer buffer;
@@ -22,9 +18,6 @@ namespace WeimoPlant
         //Link event to delegate
         public event priceCutEvent priceCut;
         public event orderProcessedEvent orderComplete;
-
-        //This is just a temporary solution to changing the price of the cars over time
-        static Random rng = new Random();
 
         //Set the default dealership car price
         //This is shared between all threads
@@ -142,7 +135,7 @@ namespace WeimoPlant
     public class LowestPrice
     {
         //Default starting price for the cars for all plants
-        private Int32 lowPrice = 500000;
+        private Int32 lowPrice;
 
         //Constructor
         public LowestPrice(Int32 price) { this.lowPrice = price; }
@@ -167,9 +160,6 @@ namespace WeimoPlant
         public void ProcessOrderString()
         {
             Order order = Order.Decode(this.orderString);
-            if(order == null) {
-                Console.WriteLine("order shouldn't be null");
-            }
 
             string encryptedCCString = encryptCC(order.CardNum);
 
