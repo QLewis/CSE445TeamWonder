@@ -7,6 +7,7 @@ namespace WeimoPlant
 {
     //Declare a delegate for the price cut event
     public delegate void priceCutEvent(String sender, Int32 cutPrice);
+    public delegate void orderProcessedEvent(Order order, string validation);
 
     public class Plant
     {
@@ -27,19 +28,21 @@ namespace WeimoPlant
         
         //Link event to delegate
         public event priceCutEvent priceCut;
+        public event orderProcessedEvent orderComplete;
 
         //This is just a temporary solution to changing the price of the cars over time
         static Random rng = new Random();
 
         //Set the default dealership car price
         //This is shared between all threads
-        public LowestPrice carPrice = new LowestPrice(500000);
+        public static LowestPrice carPrice = new LowestPrice(500000);
 
-        //This is local data unique to each thread; only the host thread can change its
-        //value. No other threads can touch it
+        //This is local data unique to each thread; only the host thread can change these
+        //value. No other threads can touch them
         private Int32 nextPrice;
-        private Double secondsSinceLastSale = 0.0;
         private Int32 priceCutEventsLeft = 5;
+        private double timeSaleModifier = 0.0;
+        private Int32 carsInStock = 100;
 
         //Returns the current price of cars
         public Int32 getPrice() { return carPrice.getLowPrice(); }
@@ -61,9 +64,22 @@ namespace WeimoPlant
             }
         }
 
-        public int newPrice(Double lastSale)
+        public void sendOrderCompleteEvent(Order _order, string _validation)
         {
-            return nextPrice + rng.Next(-100, 100);
+            if (orderComplete != null) {
+                orderComplete(_order, _validation);
+            }
+
+            if (_validation.Equals("valid")) {
+                timeSaleModifier = 0.0;
+                carsInStock -= _order.Amount;
+            }
+        }
+
+        public int newPrice(Double timeMod, int stock)
+        {
+            double price = (carPrice.getLowPrice()) / ((100 / stock) + timeMod);
+            return (int)price;
         }
 
         //This is the function that the threads execute
@@ -80,15 +96,17 @@ namespace WeimoPlant
                 String orderString = buffer.getOneCell();
 
                 if (orderString != null) {
-                    OrderProcessor processor = new OrderProcessor(this.bank, orderString);
+                    OrderProcessor processor = new OrderProcessor(this, this.bank, orderString);
                     Thread orderProcessing = new Thread(new ThreadStart(processor.ProcessOrderString));
                     orderProcessing.Start();
                 }
                 
-                Thread.Sleep(500);      //Every half second
+                Thread.Sleep(500);          //Every half second
+                timeSaleModifier += 0.01;   
+                carsInStock += 2;           //Manufacture 2 cars
 
                 //Generate a new local price for each thread
-                nextPrice = newPrice(secondsSinceLastSale);
+                nextPrice = newPrice(timeSaleModifier, carsInStock);
 
                 //By the way, Console.WriteLine works now. Don't know why it
                 //didn't work earlier
@@ -105,12 +123,14 @@ namespace WeimoPlant
         public void subscribe(Dealer dealer)
         {
             priceCut += new priceCutEvent(dealer.PriceChanged);
+            orderComplete += new orderProcessedEvent(dealer.ConfirmOrder);
         }
     }
 
     //Thread locks cannot be performed on primitive data types, so we must
     //place the price value into an object container in order to create the
     //critical section
+    //LowestPrice: The lowest price among all of the plant threads
     public class LowestPrice
     {
         //Default starting price for the cars for all plants
@@ -119,20 +139,19 @@ namespace WeimoPlant
         //Constructor
         public LowestPrice(Int32 price) { this.lowPrice = price; }
 
-        //Get overall lowest price
         public Int32 getLowPrice() { return this.lowPrice; }
-
-        //Set overall lowest price
         public void setLowPrice(Int32 newPrice) { this.lowPrice = newPrice; }
     }
 
     class OrderProcessor
     {
-        private string orderString;
+        private Plant plant;
         private Bank bank;
+        private string orderString;
 
-        public OrderProcessor(Bank _bank, string _orderString)
+        public OrderProcessor(Plant _plant, Bank _bank, string _orderString)
         {
+            this.plant = _plant;
             this.bank = _bank;
             this.orderString = _orderString;
         }
@@ -144,9 +163,7 @@ namespace WeimoPlant
             string encryptedCCString = encryptCC(order.CardNum);
 
             string validation = bank.validateCC(encryptedCCString, (order.Amount * order.UnitPrice * 1.08) + (order.Amount * 700));
-            if (validation.Equals("valid")) {
-
-            }
+            plant.sendOrderCompleteEvent(order, validation);
         }
         public string encryptCC(Int32 cardNum)
         {

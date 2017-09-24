@@ -93,6 +93,4 @@ namespace WeimoPlant
         public int cardNumber;
         public double funds;
     }
-
-
 }
