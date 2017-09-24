@@ -19,32 +19,30 @@ namespace WeimoPlant
         }
 
         //Set one cell: Allow one dealer to access the buffer, lock it, and add a single cell
-        public void setOneCell(string newName)
+        public void setOneCell(string element)
         {
             resources.WaitOne();        //Decrement the semaphore by one
             lock (buffer) {
                 //Create a new data cell and add it to the buffer
-                string newDataCell = newName;
-                buffer.Add(newDataCell);
+                buffer.Add(element);
             }
         }
 
         public string getOneCell()
         {
-            if (buffer.Count == 0) { return null; }
-
-            string dataCell;
-
+            string dataCell = null;
             lock (buffer) {
-                //Copy a data cell from the buffer, then remove it from the buffer
-                dataCell = buffer[0];
-                buffer.RemoveAt(0);
+                if (buffer.Count != 0) {
+					//Copy a data cell from the buffer, then remove it from the buffer
+					dataCell = buffer[0];
+                    buffer.RemoveAt(0);
+                    resources.Release();        //Increment the semaphore by one
+				}
             }
 
-            resources.Release();        //Increment the semaphore by one
 
-            //Return that data cell
-            return dataCell;
+			//Return that data cell
+			return dataCell;
         }
     }
 }

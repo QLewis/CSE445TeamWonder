@@ -18,13 +18,6 @@ namespace WeimoPlant
         //When the dealer tries to buy from a plant, the plant sends the account number and funds to the bank
         private Bank bank;
         private MultiCellBuffer buffer;
-
-        //Constructor that instantiates Bank and Multi-Cell Buffer objects
-        public Plant(Bank bank, MultiCellBuffer buffer)
-        {
-            this.bank = bank;
-            this.buffer = buffer;
-        }
         
         //Link event to delegate
         public event priceCutEvent priceCut;
@@ -40,12 +33,19 @@ namespace WeimoPlant
         //This is local data unique to each thread; only the host thread can change these
         //value. No other threads can touch them
         private Int32 nextPrice;
-        private Int32 priceCutEventsLeft = 5;
+        private Int32 priceCutEventsLeft = 20;
         private double timeSaleModifier = 0.0;
         private Int32 carsInStock = 100;
 
+		//Constructor that instantiates Bank and Multi-Cell Buffer objects
+		public Plant(Bank bank, MultiCellBuffer buffer)
+		{
+			this.bank = bank;
+			this.buffer = buffer;
+		}
+
         //Returns the current price of cars
-        public Int32 getPrice() { return carPrice.getLowPrice(); }
+        //public Int32 getPrice() { return carPrice.getLowPrice(); }
 
         //Change the price of the car 
         public void changePrice(Int32 newPrice)
@@ -73,13 +73,28 @@ namespace WeimoPlant
             if (_validation.Equals("valid")) {
                 timeSaleModifier = 0.0;
                 carsInStock -= _order.Amount;
+                lock (carPrice) {
+                    carPrice.setLowPrice((int)(carPrice.getLowPrice() * 1.05));   
+                }
             }
         }
 
         public int newPrice(Double timeMod, int stock)
         {
-            double price = (carPrice.getLowPrice()) / ((100 / stock) + timeMod);
+            double price = (carPrice.getLowPrice()) / ((stock / 100) + timeMod);
             return (int)price;
+        }
+
+        public void RunProcessOrders() {
+            while(true) {
+				String orderString = buffer.getOneCell();
+				if (orderString != null)
+				{
+					OrderProcessor processor = new OrderProcessor(this, this.bank, orderString);
+					Thread orderProcessing = new Thread(new ThreadStart(processor.ProcessOrderString));
+					orderProcessing.Start();
+				}
+            }
         }
 
         //This is the function that the threads execute
@@ -93,14 +108,6 @@ namespace WeimoPlant
 
             //Perform a loop to simulate real-time operation
             while (priceCutEventsLeft > 0) {
-                String orderString = buffer.getOneCell();
-
-                if (orderString != null) {
-                    OrderProcessor processor = new OrderProcessor(this, this.bank, orderString);
-                    Thread orderProcessing = new Thread(new ThreadStart(processor.ProcessOrderString));
-                    orderProcessing.Start();
-                }
-                
                 Thread.Sleep(500);          //Every half second
                 timeSaleModifier += 0.01;   
                 carsInStock += 2;           //Manufacture 2 cars
@@ -110,13 +117,13 @@ namespace WeimoPlant
 
                 //By the way, Console.WriteLine works now. Don't know why it
                 //didn't work earlier
-                Console.WriteLine("Local Plant {0} Price is ${1}, {2} events left", Thread.CurrentThread.Name ,nextPrice, priceCutEventsLeft);
+                Console.WriteLine("{0} Price is ${1}, {2} events left", Thread.CurrentThread.Name ,nextPrice, priceCutEventsLeft);
 
                 //Check to see if the overall lowest value should be updated
                 changePrice(nextPrice);
             }
 
-            Console.WriteLine("Local Plant {0} has closed.", Thread.CurrentThread.Name);
+            Console.WriteLine("{0} has closed.", Thread.CurrentThread.Name);
         }
 
         //For dealers to subscribe themselves to the price cut event
@@ -125,6 +132,7 @@ namespace WeimoPlant
             priceCut += new priceCutEvent(dealer.PriceChanged);
             orderComplete += new orderProcessedEvent(dealer.ConfirmOrder);
         }
+
     }
 
     //Thread locks cannot be performed on primitive data types, so we must
@@ -159,22 +167,36 @@ namespace WeimoPlant
         public void ProcessOrderString()
         {
             Order order = Order.Decode(this.orderString);
+            if(order == null) {
+                Console.WriteLine("order shouldn't be null");
+            }
 
             string encryptedCCString = encryptCC(order.CardNum);
 
             string validation = bank.validateCC(encryptedCCString, (order.Amount * order.UnitPrice * 1.08) + (order.Amount * 700));
             plant.sendOrderCompleteEvent(order, validation);
         }
-        public string encryptCC(Int32 cardNum)
-        {
-            IService encrypt = new ServiceClient();
-            
-            Console.WriteLine("String to be encrypted: {0}", cardNum);
 
-            string encryptedCC = encrypt.Encrypt(cardNum.ToString());
-            Console.WriteLine("Encrypted string: {0}", encryptedCC);
+		public string encryptCC(Int32 cardNum)
+		{
+            ServiceClient encryptService = null;
+            for (int i = 0; i < 10 && encryptService == null; i++) {
+				try
+				{
+					encryptService = new ServiceClient();
+				}
+				catch
+				{
+                    Console.WriteLine("Error connecting to encryption service");
+				}    
+            }
 
-            return encryptedCC;
-        }
+			//Console.WriteLine("String to be encrypted: {0}", cardNum);
+
+			string encryptedCC = encryptService.Encrypt(cardNum.ToString());
+			//Console.WriteLine("Encrypted string: {0}", encryptedCC);
+
+			return encryptedCC;
+		}
     }
 }
