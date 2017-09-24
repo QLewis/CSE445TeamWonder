@@ -71,7 +71,7 @@ namespace WeimoPlant
         }
 
         //Confirm the orders that have been completed by OrderProcessing
-        public void ConfirmOrder() {
+        public void ConfirmOrder(Order order, string validation) {
             //TODO: get the params from OrderProcessing
             DateTime confirmTime = DateTime.Now;
             Console.WriteLine("Order confirmed at " + confirmTime);
